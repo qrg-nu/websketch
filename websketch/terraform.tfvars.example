@@ -1,0 +1,3 @@
+cluster-name = "websketch"
+region = "us-east-2"
+hosted-zone = "example.com"

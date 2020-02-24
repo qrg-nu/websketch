@@ -1,0 +1,33 @@
+namespace: websketch
+commonLabels:
+  variant: example
+  
+secretGenerator:
+- name: authnode-cfg
+  files:
+  - authnode-config.php
+  - authnode.htpasswd
+- name: stackmon-cfg
+  files:
+  - stackmon.cfg
+- name: websketch-cfg
+  files:
+  - websketch.cfg
+- name: tls-cert
+  type: "kubernetes.io/tls"
+  files:
+  - tls.crt
+  - tls.key
+
+bases:
+- ../../base
+
+patches:
+- volumes.yaml
+- syslog.yaml
+- sketch-repo.yaml
+- db.yaml
+- authnode.yaml
+- websketch.yaml
+- stackmon.yaml
+- frontend.yaml

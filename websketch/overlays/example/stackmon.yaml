@@ -1,0 +1,12 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: stackmon
+spec:
+  template:
+    spec:
+      containers:
+      - name: stackmon
+        env:
+        - name: TZ
+          value: America/Chicago

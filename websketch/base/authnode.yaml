@@ -1,0 +1,123 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: lti-authnode
+  namespace: websketch
+  labels:
+    app: websketch
+    component: lti-authnode
+    awsNodeType: EC2
+spec:
+  selector:
+    matchLabels:
+      component: lti-authnode
+  template:
+    metadata:
+      labels:
+        app: websketch
+        component: lti-authnode
+        awsNodeType: EC2
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: authnode-cfg-vol
+        projected:
+          sources:
+          - secret:
+              name: authnode-cfg
+              items:
+              - key: authnode-config.php
+                path: config.php
+              - key: authnode.htpasswd
+                path: .htpasswd
+          - secret:
+              name: tls-cert
+              items:
+              - key: tls.crt
+                path: tls_cert.cer
+              - key: tls.key
+                path: tls_cert.key
+      nodeSelector:
+        nodeSpecialization: websketch
+      tolerations:
+      - key: "key"
+        operator: "Equal"
+        value: "websketch"
+        effect: "PreferNoSchedule"
+      containers:
+      - name: lti-authnode
+        image: docker.io/qrgnu/websketch.auth-node-lti
+        imagePullPolicy: Always
+        env:
+        - name: AUTHNODE_CONFIG_DIR
+          value: /appconfig
+        ports:
+        - name: authnode-port
+          protocol: TCP
+          containerPort: 443
+        - name: outcomes-port
+          protocol: TCP
+          containerPort: 80
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "0.5Gi"
+          limits:
+            cpu: "250m"
+            memory: "0.5Gi"
+        livenessProbe:
+          httpGet:
+            scheme: HTTPS
+            path: /healthcheck.xml
+            port: authnode-port
+          failureThreshold: 3
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+        volumeMounts:
+        - name: authnode-cfg-vol
+          mountPath: /appconfig
+          readOnly: true
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: lti-authnode
+  namespace: websketch
+  labels:
+    app: websketch
+    component: lti-authnode
+spec:
+  ports:
+  - name: outcomes-port
+    protocol: TCP
+    port: 80
+    targetPort: 80
+  selector:
+    component: lti-authnode
+  type: ClusterIP
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: lti-authnode-public
+  namespace: websketch
+  labels:
+    app: websketch
+    component: lti-authnode
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+spec:
+  type: LoadBalancer
+  ports:
+  - name: authnode-port
+    protocol: TCP
+    port: 443
+    targetPort: 443
+  selector:
+    component: lti-authnode

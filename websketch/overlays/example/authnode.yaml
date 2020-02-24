@@ -1,0 +1,20 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: lti-authnode
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 2
+  template:
+    spec:
+      containers:
+      - name: lti-authnode
+        env:
+        - name: TZ
+          value: America/Chicago
+        - name: AUTHNODE_HOST
+          value: websketch-lti.example.com

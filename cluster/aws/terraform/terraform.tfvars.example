@@ -1,0 +1,8 @@
+cluster-name = "websketch"
+region = "us-east-2"
+
+sketch-repo-volume-size = 10
+logs-volume-size = 2
+db-volume-size = 1
+
+kustomize-output-path = "../../../websketch/overlays/qrg-devel"

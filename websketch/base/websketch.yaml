@@ -1,0 +1,79 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: websketch-server
+  namespace: websketch
+  labels:
+    app: websketch
+    component: websketch-server
+    awsNodeType: Fargate
+spec:
+  selector:
+    matchLabels:
+      component: websketch-server
+  template:
+    metadata:
+      labels:
+        app: websketch
+        component: websketch-server
+        awsNodeType: Fargate
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 50
+      volumes:
+      - name: websketch-cfg-vol
+        secret:
+          secretName: websketch-cfg
+      containers:
+      - name: websketch-server
+        image: docker.io/qrgnu/websketch.websketch-server
+        imagePullPolicy: Always
+        env:
+        - name: WEBSKETCH_CONFIG_FILE
+          value: /appconfig/websketch.cfg
+        ports:
+        - name: websketch-port
+          protocol: TCP
+          containerPort: 9100
+        stdin: true
+        tty: true
+        resources:
+          requests:
+            cpu: "1000m"
+            memory: "4Gi"
+          limits:
+            cpu: "2000m"
+            memory: "6Gi"
+        livenessProbe:
+          httpGet:
+            scheme: HTTP
+            path: /websketch/healthcheck.xml
+            port: websketch-port
+          failureThreshold: 3
+          initialDelaySeconds: 40
+          periodSeconds: 10
+          timeoutSeconds: 5
+        volumeMounts:
+        - name: websketch-cfg-vol
+          mountPath: /appconfig
+          readOnly: true
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: websketch-server
+  namespace: websketch
+  labels:
+    app: websketch
+    component: websketch-server
+spec:
+  ports:
+  - name: websketch-svc-port
+    protocol: TCP
+    port: 9100
+    targetPort: 9100
+  selector:
+    component: websketch-server
+  type: ClusterIP

@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: websketch-ingress
+  namespace: websketch
+spec:
+  tls:
+    - hosts:
+      - websketch.example.com
+      secretName: tls-cert
+  rules:
+  - host: websketch.example.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: websketch-server
+          servicePort: 9100
+      - path: /stackmon
+        backend:
+          serviceName: stackmon
+          servicePort: 80
+      - path: /sketchrepo
+        backend:
+          serviceName: sketch-repo
+          servicePort: 2000

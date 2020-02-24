@@ -1,0 +1,103 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: stackmon
+  namespace: websketch
+  labels:
+    app: websketch
+    component: stackmon
+    awsNodeType: EC2   # these pods require access to persistent storage
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      component: stackmon
+  template:
+    metadata:
+      labels:
+        app: websketch
+        component: stackmon
+        awsNodeType: EC2   # these pods require access to persistent storage
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: stackmon-cfg-vol
+        secret:
+          secretName: stackmon-cfg
+      - name: syslog-vol
+        persistentVolumeClaim:
+          claimName: syslog-claim
+      - name: lti-db-vol
+        persistentVolumeClaim:
+          claimName: lti-db-claim
+      nodeSelector:
+        nodeSpecialization: websketch
+      tolerations:
+      - key: "key"
+        operator: "Equal"
+        value: "websketch"
+        effect: "PreferNoSchedule"
+      containers:
+      - name: stackmon
+        image: docker.io/qrgnu/websketch.stackmon
+        imagePullPolicy: Always
+        env:
+        - name: STACKMON_CONFIG_FILE
+          value: /appconfig/stackmon.cfg
+        ports:
+        - name: stackmon-port
+          protocol: TCP
+          containerPort: 80
+        stdin: true
+        tty: true
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "0.5Gi"
+          limits:
+            cpu: "250m"
+            memory: "0.5Gi"
+        livenessProbe:
+          httpGet:
+            scheme: HTTP
+            path: /healthcheck.xml
+            port: stackmon-port
+          failureThreshold: 3
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+        volumeMounts:
+        - name: stackmon-cfg-vol
+          mountPath: /appconfig
+          readOnly: true
+        - name: syslog-vol
+          mountPath: /logs
+        - name: lti-db-vol
+          mountPath: /lti-db
+          readOnly: true
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: stackmon
+  namespace: websketch
+  labels:
+    app: websketch
+    component: stackmon
+spec:
+  ports:
+  - name: stackmon-svc-port
+    protocol: TCP
+    port: 80
+    targetPort: 80
+  selector:
+    component: stackmon
+  type: ClusterIP

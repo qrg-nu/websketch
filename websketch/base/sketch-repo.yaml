@@ -1,0 +1,88 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: sketch-repo
+  namespace: websketch
+  labels:
+    app: websketch
+    component: sketch-repo
+    awsNodeType: EC2   # these pods require access to persistent storage
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      component: sketch-repo
+  template:
+    metadata:
+      labels:
+        app: websketch
+        component: sketch-repo
+        awsNodeType: EC2   # these pods require access to persistent storage
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 50
+      volumes:
+      - name: repo-vol
+        persistentVolumeClaim:
+          claimName: sketch-repo-claim
+      nodeSelector:
+        nodeSpecialization: websketch
+      tolerations:
+      - key: "key"
+        operator: "Equal"
+        value: "websketch"
+        effect: "PreferNoSchedule"
+      containers:
+      - name: sketch-repo
+        image: docker.io/qrgnu/websketch.sketch-repo
+        imagePullPolicy: Always
+        ports:
+        - name: srepo-port
+          protocol: TCP
+          containerPort: 2000
+        stdin: true
+        tty: true
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "0.5Gi"
+          limits:
+            cpu: "250m"
+            memory: "0.5Gi"
+        livenessProbe:
+          httpGet:
+            scheme: HTTP
+            path: /healthcheck.xml
+            port: srepo-port
+          failureThreshold: 3
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+        volumeMounts:
+        - name: repo-vol
+          mountPath: /sketch-repo
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: sketch-repo
+  namespace: websketch
+  labels:
+    app: websketch
+    component: sketch-repo
+spec:
+  ports:
+  - name: srepo-port
+    protocol: TCP
+    port: 2000
+    targetPort: 2000
+  selector:
+    component: sketch-repo
+  type: ClusterIP

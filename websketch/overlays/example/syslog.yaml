@@ -1,0 +1,12 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: rsyslog
+spec:
+  template:
+    spec:
+      containers:
+      - name: rsyslog
+        env:
+        - name: TZ
+          value: America/Chicago

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-secrets
+stringData:
+  db-root-pwd: booferat0r
+  db-name: db_lti_websketch_auth
+  db-user: lti-qrg
+  db-pwd: BONGAb00m

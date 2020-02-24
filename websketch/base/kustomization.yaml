@@ -1,0 +1,13 @@
+namespace: websketch
+commonLabels:
+  app: websketch
+resources:
+- general-defs.yaml
+- volumes.yaml
+- syslog.yaml
+- sketch-repo.yaml
+- db.yaml
+- authnode.yaml
+- websketch.yaml
+- stackmon.yaml
+- frontend.yaml

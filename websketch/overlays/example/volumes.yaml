@@ -1,0 +1,92 @@
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: syslog-pv
+spec:
+  capacity:
+    storage: "2Gi"
+  csi:
+    volumeHandle: vol-0777f48ad3f456278
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: topology.ebs.csi.aws.com/zone
+          operator: In
+          values:
+          - us-east-2a
+  
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: syslog-claim
+spec:
+  resources:
+    requests:
+      storage: "2Gi"
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: sketch-repo-pv
+spec:
+  capacity:
+    storage: "10Gi"
+  csi:
+    volumeHandle: vol-0fdc972b9ab9abc88
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: topology.ebs.csi.aws.com/zone
+          operator: In
+          values:
+          - us-east-2a
+  
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sketch-repo-claim
+spec:
+  resources:
+    requests:
+      storage: "10Gi"
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: lti-db-pv
+spec:
+  capacity:
+    storage: "1Gi"
+  csi:
+    volumeHandle: vol-0a6b0632c7d754858
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: topology.ebs.csi.aws.com/zone
+          operator: In
+          values:
+          - us-east-2a
+  
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lti-db-claim
+spec:
+  resources:
+    requests:
+      storage: "1Gi"
+
